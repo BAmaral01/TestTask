@@ -1,0 +1,1 @@
+python sync_folders.py /caminho/da/pasta/de/origem /caminho/da/pasta/de/replica /caminho/do/arquivo/de/log intervalo_em_segundos

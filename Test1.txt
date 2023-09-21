@@ -1,0 +1,54 @@
+import os
+import shutil
+import time
+import argparse
+
+def sync_folders(source_folder, replica_folder, log_file, interval):
+    while True:
+        try:
+            # Garanta que as pastas de origem e réplica existam
+            if not os.path.exists(source_folder):
+                print(f"A pasta de origem '{source_folder}' não existe.")
+                time.sleep(interval)
+                continue
+
+            if not os.path.exists(replica_folder):
+                os.makedirs(replica_folder)
+
+            # Listar arquivos na pasta de origem
+            source_files = set(os.listdir(source_folder))
+            replica_files = set(os.listdir(replica_folder))
+
+            # Encontre arquivos para adicionar ou atualizar
+            for file in source_files:
+                source_file_path = os.path.join(source_folder, file)
+                replica_file_path = os.path.join(replica_folder, file)
+
+                if file not in replica_files or os.path.getmtime(source_file_path) > os.path.getmtime(replica_file_path):
+                    shutil.copy2(source_file_path, replica_file_path)
+                    print(f"Arquivo copiado: {source_file_path} -> {replica_file_path}")
+
+            # Encontre arquivos para remover na pasta de réplica
+            for file in replica_files:
+                replica_file_path = os.path.join(replica_folder, file)
+                if file not in source_files:
+                    os.remove(replica_file_path)
+                    print(f"Arquivo removido: {replica_file_path}")
+
+            # Aguarde o próximo intervalo de sincronização
+            time.sleep(interval)
+
+        except Exception as e:
+            print(f"Ocorreu um erro durante a sincronização: {str(e)}")
+            time.sleep(interval)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Sincronizar duas pastas unidirecionalmente.")
+    parser.add_argument("source_folder", help="Caminho da pasta de origem")
+    parser.add_argument("replica_folder", help="Caminho da pasta de réplica")
+    parser.add_argument("log_file", help="Caminho do arquivo de log")
+    parser.add_argument("interval", type=int, help="Intervalo de sincronização em segundos")
+    
+    args = parser.parse_args()
+
+    sync_folders(args.source_folder, args.replica_folder, args.log_file, args.interval)
